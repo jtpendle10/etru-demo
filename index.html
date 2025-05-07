@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>eTRU Trailer Metrics</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -28,6 +29,7 @@
       flex-wrap: wrap;
       justify-content: center;
       gap: 2rem;
+      margin-bottom: 3rem;
     }
 
     .metric-card {
@@ -52,10 +54,18 @@
       color: #2c7be5;
     }
 
-    @media (max-width: 600px) {
-      .metric-card {
-        width: 100%;
-      }
+    #chart-container {
+      width: 90%;
+      max-width: 900px;
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    canvas {
+      width: 100% !important;
+      height: auto !important;
     }
   </style>
 </head>
@@ -75,20 +85,27 @@
     </div>
 
     <div class="metric-card">
-      <h2>eTRU Spot Assignment Rate</h2>
+      <h2>% Assigned to eTRU Spots</h2>
       <div class="value" id="count3">Loading...</div>
     </div>
   </div>
 
+  <div id="chart-container">
+    <h2 style="text-align:center;">eTRU Trailer Appointments (180 Days)</h2>
+    <canvas id="lineChart"></canvas>
+  </div>
+
   <script>
-    const date = new Date();
-    date.setDate(date.getDate() - 30);
-    const isoDate = date.toISOString().split('T')[0];
+    const today = new Date();
+    const startDate = new Date();
+    startDate.setDate(today.getDate() - 180);
+    const isoStart = startDate.toISOString().split('T')[0];
 
     const query = `
       query($filter: TrailerAppointmentFilter) {
         trailerAppointments(filter: $filter) {
           nodes {
+            checkinTime
             trailer {
               supportEtru
               parkSessions {
@@ -110,7 +127,7 @@
     const variables = {
       filter: {
         checkinTime: {
-          greaterThan: isoDate
+          greaterThan: isoStart
         }
       }
     };
@@ -126,16 +143,14 @@
     .then(data => {
       const trailers = data?.data?.trailerAppointments?.nodes || [];
 
-      // Metric 1: Trailers supporting eTRU
+      // Metric 1
       const supportEtruCount = trailers.filter(
         t => t.trailer?.supportEtru === true
       ).length;
       document.getElementById('count1').textContent = supportEtruCount;
 
-      // Metric 2: parkSessions on eTRU trailers, in yard, without eTRU
+      // Metric 2 & 3
       let yardSessionsWithoutEtru = 0;
-
-      // Metric 3: percentage of eTRU trailers parked in eTRU yard spaces
       let totalYardSessions = 0;
       let etruYardSessions = 0;
 
@@ -145,10 +160,8 @@
 
           sessions.forEach(s => {
             const isYard = s.space?.spaceCategory?.name?.toLowerCase() === 'yard';
-
             if (isYard) {
               totalYardSessions++;
-
               if (s.space?.etruEnabled === true) {
                 etruYardSessions++;
               } else {
@@ -160,11 +173,71 @@
       });
 
       document.getElementById('count2').textContent = yardSessionsWithoutEtru;
-
       const percent = totalYardSessions > 0
         ? Math.round((etruYardSessions / totalYardSessions) * 100)
         : 0;
       document.getElementById('count3').textContent = `${percent}%`;
+
+      // Metric 4: Line Chart - group into 30-day buckets
+      const bucketCounts = {};
+      for (let i = 0; i < 6; i++) {
+        const bucketStart = new Date();
+        bucketStart.setDate(today.getDate() - (30 * (i + 1)));
+        const bucketEnd = new Date();
+        bucketEnd.setDate(today.getDate() - (30 * i));
+
+        const key = `${bucketStart.toISOString().split('T')[0]} to ${bucketEnd.toISOString().split('T')[0]}`;
+        bucketCounts[key] = 0;
+      }
+
+      trailers.forEach(t => {
+        if (t.trailer?.supportEtru !== true || !t.checkinTime) return;
+
+        const checkinDate = new Date(t.checkinTime);
+        for (let key in bucketCounts) {
+          const [start, end] = key.split(' to ').map(d => new Date(d));
+          if (checkinDate >= start && checkinDate < end) {
+            bucketCounts[key]++;
+            break;
+          }
+        }
+      });
+
+      const labels = Object.keys(bucketCounts).reverse();
+      const values = labels.map(label => bucketCounts[label]);
+
+      const ctx = document.getElementById('lineChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'eTRU Appointments',
+            data: values,
+            borderColor: '#2c7be5',
+            borderWidth: 2,
+            fill: false,
+            tension: 0.3,
+            pointBackgroundColor: '#2c7be5'
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              display: true
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                precision: 0
+              }
+            }
+          }
+        }
+      });
     })
     .catch(err => {
       console.error(err);
