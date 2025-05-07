@@ -70,13 +70,17 @@
     </div>
 
     <div class="metric-card">
-      <h2>Missed eTRU Trailer Assignments</h2>
+      <h2>Non-eTRU Yard Park Sessions</h2>
       <div class="value" id="count2">Loading...</div>
+    </div>
+
+    <div class="metric-card">
+      <h2>% Assigned to eTRU Spots</h2>
+      <div class="value" id="count3">Loading...</div>
     </div>
   </div>
 
   <script>
-    // Calculate date 30 days ago
     const date = new Date();
     date.setDate(date.getDate() - 30);
     const isoDate = date.toISOString().split('T')[0];
@@ -122,35 +126,51 @@
     .then(data => {
       const trailers = data?.data?.trailerAppointments?.nodes || [];
 
-      // Primary metric: trailers where supportEtru === true
+      // Metric 1: Trailers supporting eTRU
       const supportEtruCount = trailers.filter(
         t => t.trailer?.supportEtru === true
       ).length;
       document.getElementById('count1').textContent = supportEtruCount;
 
-      // Secondary metric: parkSessions on eTRU trailers where yard && !etruEnabled
+      // Metric 2: parkSessions on eTRU trailers, in yard, without eTRU
       let yardSessionsWithoutEtru = 0;
+
+      // Metric 3: percentage of eTRU trailers parked in eTRU yard spaces
+      let totalYardSessions = 0;
+      let etruYardSessions = 0;
 
       trailers.forEach(t => {
         if (t.trailer?.supportEtru === true) {
           const sessions = t.trailer?.parkSessions?.nodes || [];
+
           sessions.forEach(s => {
-            if (
-              s.space?.spaceCategory?.name?.toLowerCase() === 'yard' &&
-              s.space?.etruEnabled === false
-            ) {
-              yardSessionsWithoutEtru++;
+            const isYard = s.space?.spaceCategory?.name?.toLowerCase() === 'yard';
+
+            if (isYard) {
+              totalYardSessions++;
+
+              if (s.space?.etruEnabled === true) {
+                etruYardSessions++;
+              } else {
+                yardSessionsWithoutEtru++;
+              }
             }
           });
         }
       });
 
       document.getElementById('count2').textContent = yardSessionsWithoutEtru;
+
+      const percent = totalYardSessions > 0
+        ? Math.round((etruYardSessions / totalYardSessions) * 100)
+        : 0;
+      document.getElementById('count3').textContent = `${percent}%`;
     })
     .catch(err => {
       console.error(err);
       document.getElementById('count1').textContent = 'Error';
       document.getElementById('count2').textContent = 'Error';
+      document.getElementById('count3').textContent = 'Error';
     });
   </script>
 
