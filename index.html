@@ -76,7 +76,7 @@
       <div class="value" id="count1">Loading...</div>
     </div>
     <div class="metric-card">
-      <h2>eTRU Missed Assignements</h2>
+      <h2>eTRU Missed Assignments</h2>
       <div class="value" id="count2">Loading...</div>
     </div>
     <div class="metric-card">
@@ -122,6 +122,7 @@
       }
     `;
 
+    // --- Metric Fetch (Last 30 Days) ---
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(today.getDate() - 30);
     const isoDate = thirtyDaysAgo.toISOString().split('T')[0];
@@ -146,11 +147,11 @@
     .then(data => {
       const trailers = data?.data?.trailerAppointments?.nodes || [];
 
-      // Metric 1: supportEtru === true
+      // Metric 1: Count of trailers that support eTRU
       const supportEtruCount = trailers.filter(t => t.trailer?.supportEtru === true).length;
       document.getElementById('count1').textContent = supportEtruCount;
 
-      // Metric 2 & 3
+      // Metric 2 & 3: Missed assignments + Assignment rate
       let yardSessionsWithoutEtru = 0;
       let totalYardSessions = 0;
       let etruYardSessions = 0;
@@ -177,8 +178,39 @@
         ? Math.round((etruYardSessions / totalYardSessions) * 100)
         : 0;
       document.getElementById('count3').textContent = `${percent}%`;
+    })
+    .catch(err => {
+      console.error('Metric fetch error:', err);
+      document.getElementById('count1').textContent = 'Error';
+      document.getElementById('count2').textContent = 'Error';
+      document.getElementById('count3').textContent = 'Error';
+    });
 
-      // Metric 4: Line Chart over past 180 days in 30-day buckets
+    // --- Chart Fetch (Last 180 Days, 30-Day Buckets) ---
+    const chartStart = new Date();
+    chartStart.setDate(today.getDate() - 180);
+
+    fetch('https://etru-demo-proxy.onrender.com/proxy', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        query,
+        variables: {
+          filter: {
+            checkinTime: {
+              greaterThan: chartStart.toISOString()
+            }
+          }
+        }
+      })
+    })
+    .then(res => res.json())
+    .then(chartData => {
+      const chartTrailers = chartData?.data?.trailerAppointments?.nodes || [];
+
+      // Build 6 buckets (30-day windows, oldest to newest)
       const bucketLabels = [];
       const bucketCounts = {};
       const bucketRanges = [];
@@ -197,9 +229,8 @@
         bucketRanges.push({ start, end, label });
       }
 
-      trailers.forEach(t => {
+      chartTrailers.forEach(t => {
         if (t.trailer?.supportEtru !== true || !t.checkinTime) return;
-
         const checkinDate = new Date(t.checkinTime);
         for (const { start, end, label } of bucketRanges) {
           if (checkinDate >= start && checkinDate < end) {
@@ -209,17 +240,14 @@
         }
       });
 
-      const chartLabels = bucketLabels;
-      const chartValues = chartLabels.map(label => bucketCounts[label]);
-
       const ctx = document.getElementById('lineChart').getContext('2d');
       new Chart(ctx, {
         type: 'line',
         data: {
-          labels: chartLabels,
+          labels: bucketLabels,
           datasets: [{
             label: 'eTRU Appointments',
-            data: chartValues,
+            data: bucketLabels.map(label => bucketCounts[label]),
             borderColor: '#2c7be5',
             borderWidth: 2,
             fill: false,
@@ -230,31 +258,24 @@
         options: {
           responsive: true,
           plugins: {
-            legend: {
-              display: true
-            },
+            legend: { display: true },
             tooltip: {
               callbacks: {
-                label: (context) => `${context.parsed.y} appointments`
+                label: ctx => `${ctx.parsed.y} appointments`
               }
             }
           },
           scales: {
             y: {
               beginAtZero: true,
-              ticks: {
-                precision: 0
-              }
+              ticks: { precision: 0 }
             }
           }
         }
       });
     })
     .catch(err => {
-      console.error(err);
-      document.getElementById('count1').textContent = 'Error';
-      document.getElementById('count2').textContent = 'Error';
-      document.getElementById('count3').textContent = 'Error';
+      console.error('Chart data fetch error:', err);
     });
   </script>
 
