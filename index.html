@@ -5,71 +5,95 @@
   <title>eTRU Metrics</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f0f4f8;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 2rem;
-      margin: 0;
-    }
+body {
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  background: #f4f6f9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  margin: 0;
+  color: #2b2f32;
+}
 
-    h1 {
-      margin-bottom: 2rem;
-      color: #333;
-    }
+h1, h2 {
+  font-weight: 600;
+  color: #2b2f32;
+  margin: 0 0 1rem;
+}
 
-    .card-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 2rem;
-      margin-bottom: 3rem;
-    }
+.card-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  width: 100%;
+  max-width: 1200px;
+}
 
-    .metric-card {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      padding: 2rem;
-      min-width: 260px;
-      max-width: 320px;
-      text-align: center;
-    }
+.metric-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  padding: 1.5rem;
+  min-width: 220px;
+  flex: 1;
+  text-align: left;
+}
 
-    .metric-card h2 {
-      margin: 0 0 1rem;
-      font-size: 1.25rem;
-      color: #555;
-    }
+.metric-card h2 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: #5c636a;
+}
 
-    .metric-card .value {
-      font-size: 2.5rem;
-      font-weight: bold;
-      color: #2c7be5;
-    }
+.metric-card .value {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #1e3a8a;
+}
 
-    canvas {
-      max-width: 800px;
-      width: 100%;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      padding: 1rem;
-    }
+canvas {
+  width: 100%;
+  max-width: 800px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
 
-    @media (max-width: 600px) {
-      .metric-card {
-        width: 100%;
-      }
-    }
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: white;
+  background-color: #6b7280; /* default gray */
+  margin-left: 0.5rem;
+}
+
+.badge.waitlist {
+  background-color: #d97706; /* amber-600 */
+}
+
+.badge.inbound {
+  background-color: #2563eb; /* blue-600 */
+}
+
+.badge.outbound {
+  background-color: #059669; /* green-600 */
+}
   </style>
 </head>
 <body>
 
   <h1>Ndustrial (Staging) eTRU Metrics (Last 30 Days)</h1>
-
+<div style="display: flex; flex-wrap: wrap; gap: 2rem; justify-content: center; width: 100%; max-width: 1200px;">
+  <div style="flex: 1;">
   <div class="card-container">
     <div class="metric-card">
       <h2>eTRU Trailers</h2>
@@ -84,9 +108,13 @@
       <div class="value" id="count3">Loading...</div>
     </div>
   </div>
+</div>
+  <div style="flex: 2;">
+    <h2 style="margin-left: 1rem;">eTRU Trailer Appointments Over Time</h2>
+    <canvas id="lineChart" height="300"></canvas>
+  </div>
+</div>
 
-  <h2>eTRU Trailer Appointments Over Time (Last 180 Days)</h2>
-  <canvas id="lineChart" height="300"></canvas>
 
   <script>
     const today = new Date();
