@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Support eTRU Trailer Count</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    #count {
+      font-size: 2rem;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <h1>Trailers Supporting eTRU (Last 30 Days)</h1>
+    <div id="count">Loading...</div>
+  </div>
+
+  <script>
+    // Calculate date 30 days ago
+    const date = new Date();
+    date.setDate(date.getDate() - 30);
+    const isoDate = date.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
+    // GraphQL query from the cURL you provided
+    const query = `
+      query($filter: TrailerAppointmentFilter) {
+        trailerAppointments(filter: $filter) {
+          nodes {
+            trailer {
+              carrierCode
+              supportEtru
+              parkSessions {
+                nodes {
+                  space {
+                    name
+                    etruEnabled
+                    spaceCategory {
+                      name
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const variables = {
+      filter: {
+        checkinTime: {
+          greaterThan: isoDate
+        }
+      }
+    };
+
+    fetch('https://etru-demo-proxy.onrender.com/proxy', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+        // Optionally add Authorization if needed
+        // 'Authorization': 'Bearer YOUR_TOKEN'
+      },
+      body: JSON.stringify({ query, variables })
+    })
+    .then(res => res.json())
+    .then(data => {
+      const trailers = data?.data?.trailerAppointments?.nodes || [];
+      const count = trailers.filter(t => t.trailer?.supportEtru === true).length;
+      document.getElementById('count').textContent = count;
+    })
+    .catch(err => {
+      console.error(err);
+      document.getElementById('count').textContent = 'Error fetching data';
+    });
+  </script>
+</body>
+</html>
