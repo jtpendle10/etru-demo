@@ -260,10 +260,26 @@
           plugins: {
             legend: { display: true },
             tooltip: {
-              callbacks: {
-                label: ctx => `${ctx.parsed.y} appointments`
-              }
-            }
+  callbacks: {
+    title: (tooltipItems) => {
+      const index = tooltipItems[0].dataIndex;
+      const range = bucketRanges[index];
+      const startStr = range.start.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+      const endStr = range.end.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+      return `${startStr} – ${endStr}`;
+    },
+    label: (ctx) => `${ctx.parsed.y} appointments`
+  }
+}
+
           },
           scales: {
             y: {
