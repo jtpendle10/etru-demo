@@ -39,4 +39,224 @@
     }
 
     .metric-card h2 {
-      margin:
+      margin: 0 0 1rem;
+      font-size: 1.25rem;
+      color: #555;
+    }
+
+    .metric-card .value {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #2c7be5;
+    }
+
+    canvas {
+      max-width: 800px;
+      width: 100%;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 1rem;
+    }
+
+    @media (max-width: 600px) {
+      .metric-card {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>eTRU Trailer Metrics (Last 30 Days)</h1>
+
+  <div class="card-container">
+    <div class="metric-card">
+      <h2>Trailers Supporting eTRU</h2>
+      <div class="value" id="count1">Loading...</div>
+    </div>
+    <div class="metric-card">
+      <h2>Non-eTRU Yard Park Sessions</h2>
+      <div class="value" id="count2">Loading...</div>
+    </div>
+    <div class="metric-card">
+      <h2>% Assigned to eTRU Spots</h2>
+      <div class="value" id="count3">Loading...</div>
+    </div>
+  </div>
+
+  <h2>eTRU Trailer Appointments Over Time</h2>
+  <canvas id="lineChart" height="300"></canvas>
+
+  <script>
+    const today = new Date();
+
+    function formatDateLabel(date) {
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+
+    const query = `
+      query($filter: TrailerAppointmentFilter) {
+        trailerAppointments(filter: $filter) {
+          nodes {
+            checkinTime
+            trailer {
+              supportEtru
+              parkSessions {
+                nodes {
+                  space {
+                    etruEnabled
+                    spaceCategory {
+                      name
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    const isoDate = thirtyDaysAgo.toISOString().split('T')[0];
+
+    fetch('https://etru-demo-proxy.onrender.com/proxy', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        query,
+        variables: {
+          filter: {
+            checkinTime: {
+              greaterThan: isoDate
+            }
+          }
+        }
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      const trailers = data?.data?.trailerAppointments?.nodes || [];
+
+      // Metric 1: supportEtru === true
+      const supportEtruCount = trailers.filter(t => t.trailer?.supportEtru === true).length;
+      document.getElementById('count1').textContent = supportEtruCount;
+
+      // Metric 2 & 3
+      let yardSessionsWithoutEtru = 0;
+      let totalYardSessions = 0;
+      let etruYardSessions = 0;
+
+      trailers.forEach(t => {
+        if (t.trailer?.supportEtru === true) {
+          const sessions = t.trailer?.parkSessions?.nodes || [];
+          sessions.forEach(s => {
+            const isYard = s.space?.spaceCategory?.name?.toLowerCase() === 'yard';
+            if (isYard) {
+              totalYardSessions++;
+              if (s.space?.etruEnabled === true) {
+                etruYardSessions++;
+              } else {
+                yardSessionsWithoutEtru++;
+              }
+            }
+          });
+        }
+      });
+
+      document.getElementById('count2').textContent = yardSessionsWithoutEtru;
+      const percent = totalYardSessions > 0
+        ? Math.round((etruYardSessions / totalYardSessions) * 100)
+        : 0;
+      document.getElementById('count3').textContent = `${percent}%`;
+
+      // Metric 4: Line Chart over past 180 days in 30-day buckets
+      const bucketLabels = [];
+      const bucketCounts = {};
+      const bucketRanges = [];
+
+      for (let i = 5; i >= 0; i--) {
+        const start = new Date();
+        start.setDate(today.getDate() - 180 + (30 * i));
+        start.setHours(0, 0, 0, 0);
+
+        const end = new Date(start);
+        end.setDate(start.getDate() + 30);
+
+        const label = formatDateLabel(start);
+        bucketLabels.push(label);
+        bucketCounts[label] = 0;
+        bucketRanges.push({ start, end, label });
+      }
+
+      trailers.forEach(t => {
+        if (t.trailer?.supportEtru !== true || !t.checkinTime) return;
+
+        const checkinDate = new Date(t.checkinTime);
+        for (const { start, end, label } of bucketRanges) {
+          if (checkinDate >= start && checkinDate < end) {
+            bucketCounts[label]++;
+            break;
+          }
+        }
+      });
+
+      const chartLabels = bucketLabels;
+      const chartValues = chartLabels.map(label => bucketCounts[label]);
+
+      const ctx = document.getElementById('lineChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: chartLabels,
+          datasets: [{
+            label: 'eTRU Appointments',
+            data: chartValues,
+            borderColor: '#2c7be5',
+            borderWidth: 2,
+            fill: false,
+            tension: 0.3,
+            pointBackgroundColor: '#2c7be5'
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              display: true
+            },
+            tooltip: {
+              callbacks: {
+                label: (context) => `${context.parsed.y} appointments`
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                precision: 0
+              }
+            }
+          }
+        }
+      });
+    })
+    .catch(err => {
+      console.error(err);
+      document.getElementById('count1').textContent = 'Error';
+      document.getElementById('count2').textContent = 'Error';
+      document.getElementById('count3').textContent = 'Error';
+    });
+  </script>
+
+</body>
+</html>
