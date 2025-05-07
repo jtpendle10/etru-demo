@@ -183,7 +183,7 @@
       const bucketCounts = {};
       const bucketRanges = [];
 
-      for (let i = 5; i >= 0; i--) {
+      for (let i = 0; i < 6; i++) {
         const start = new Date();
         start.setDate(today.getDate() - 180 + (30 * i));
         start.setHours(0, 0, 0, 0);
