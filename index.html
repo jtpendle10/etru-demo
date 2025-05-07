@@ -92,8 +92,7 @@ canvas {
 <body>
 
   <h1>Ndustrial (Staging) eTRU Metrics (Last 30 Days)</h1>
-<div style="display: flex; flex-wrap: wrap; gap: 2rem; justify-content: center; width: 100%; max-width: 1200px;">
-  <div style="flex: 1;">
+<div style="width: 100%; max-width: 1200px;">
   <div class="card-container">
     <div class="metric-card">
       <h2>eTRU Trailers</h2>
@@ -108,12 +107,11 @@ canvas {
       <div class="value" id="count3">Loading...</div>
     </div>
   </div>
+
+  <h2 style="margin-left: 0.5rem;">eTRU Trailer Appointments Over Time</h2>
+  <canvas id="lineChart" height="300"></canvas>
 </div>
-  <div style="flex: 2;">
-    <h2 style="margin-left: 1rem;">eTRU Trailer Appointments Over Time</h2>
-    <canvas id="lineChart" height="300"></canvas>
-  </div>
-</div>
+
 
 
   <script>
