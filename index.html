@@ -114,6 +114,14 @@ canvas {
       <h2>eTRU Assignment Rate</h2>
       <div class="value" id="count3">Loading...</div>
     </div>
+    <div class="metric-card">
+  <h2>Submeter Sessions</h2>
+  <div class="value" id="submeterCount">Loading...</div>
+</div>
+<div class="metric-card">
+  <h2>Total Submeter Duration</h2>
+  <div class="value" id="submeterDuration">Loading...</div>
+</div>
   </div>
 
  <div style="width: 100%; max-width: 1200px; margin: 0 auto;">
@@ -330,6 +338,60 @@ canvas {
     .catch(err => {
       console.error('Chart data fetch error:', err);
     });
+    const submeterQuery = `
+  query {
+    submeterSessions {
+      nodes {
+        id
+        startTime
+        endTime
+      }
+    }
+  }
+`;
+
+fetch('https://etru-proxy-power.onrender.com/proxy', { // Replace with your actual second proxy
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ query: submeterQuery })
+})
+.then(res => res.json())
+.then(data => {
+  const now = new Date();
+  const past30 = new Date();
+  past30.setDate(now.getDate() - 30);
+
+  const sessions = (data?.data?.submeterSessions?.nodes || []).filter(session => {
+    const start = new Date(session.startTime);
+    return start >= past30;
+  });
+
+  // Metric A: Count
+  const sessionCount = sessions.length;
+  document.getElementById('submeterCount').textContent = sessionCount;
+
+  // Metric B: Total duration
+  let totalDurationMs = 0;
+  sessions.forEach(s => {
+    if (s.startTime && s.endTime) {
+      const start = new Date(s.startTime);
+      const end = new Date(s.endTime);
+      totalDurationMs += (end - start);
+    }
+  });
+
+  const totalHours = Math.round(totalDurationMs / (1000 * 60 * 60));
+  document.getElementById('submeterDuration').textContent = `${totalHours} hrs`;
+
+})
+.catch(err => {
+  console.error('Submeter fetch error:', err);
+  document.getElementById('submeterCount').textContent = 'Error';
+  document.getElementById('submeterDuration').textContent = 'Error';
+});
+
   </script>
 
 </body>
