@@ -107,6 +107,10 @@
         <div class="value" id="count1">Loading...</div>
       </div>
       <div class="metric-card">
+        <h2>eTRU-Enabled Trailer %</h2>
+        <div class="value" id="percentEtruEnabled">Loading...</div>
+      </div>
+      <div class="metric-card">
         <h2>eTRU Missed Assignments</h2>
         <div class="value" id="count2">Loading...</div>
       </div>
@@ -191,6 +195,11 @@
       // Metric 1: Count of trailers that support eTRU
       const supportEtruCount = trailers.filter(t => t.trailer?.supportEtru === true).length;
       document.getElementById('count1').textContent = supportEtruCount;
+
+      // Metric 6: Percent of trailers that are eTRU enabled
+const totalAppointments = trailers.length;
+const etruPercent = totalAppointments > 0 ? Math.round((supportEtruCount / totalAppointments) * 100) : 0;
+document.getElementById('percentEtruEnabled').textContent = `${etruPercent}%`;
 
       // Metric 2 & 3: Missed assignments + Assignment rate
       let yardSessionsWithoutEtru = 0;
