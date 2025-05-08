@@ -107,6 +107,10 @@
         <div class="value" id="count1">Loading...</div>
       </div>
       <div class="metric-card">
+        <h2>total appointments counted</h2>
+        <div class="value" id="totalCountTrailers">Loading...</div>
+      </div>
+      <div class="metric-card">
         <h2>eTRU-Enabled Trailer %</h2>
         <div class="value" id="percentEtruEnabled">Loading...</div>
       </div>
@@ -200,6 +204,7 @@
 const totalAppointments = trailers.length;
 const etruPercent = totalAppointments > 0 ? Math.round((supportEtruCount / totalAppointments) * 100) : 0;
 document.getElementById('percentEtruEnabled').textContent = `${etruPercent}%`;
+document.getElementById('totalCountTrailers').textContent = `${totalAppointments} trailers`;
 
       // Metric 2 & 3: Missed assignments + Assignment rate
       let yardSessionsWithoutEtru = 0;
