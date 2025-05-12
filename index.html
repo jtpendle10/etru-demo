@@ -287,19 +287,21 @@ document.getElementById('percentEtruEnabled').textContent = `${etruPercent}%`;
       const bucketCounts = {};
       const bucketRanges = [];
 
-      for (let i = 0; i < 6; i++) {
-        const start = new Date();
-        start.setDate(today.getDate() - 180 + (30 * i));
-        start.setHours(0, 0, 0, 0);
+     // Start from 6 months ago
+let current = new Date(today.getFullYear(), today.getMonth() - 5, 1);
 
-        const end = new Date(start);
-        end.setDate(start.getDate() + 30);
+for (let i = 0; i < 6; i++) {
+  const start = new Date(current.getFullYear(), current.getMonth(), 1);
+  const end = new Date(current.getFullYear(), current.getMonth() + 1, 1);
+  const label = start.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 
-        const label = formatDateLabel(start);
-        bucketLabels.push(label);
-        bucketCounts[label] = 0;
-        bucketRanges.push({ start, end, label });
-      }
+  bucketLabels.push(label);
+  bucketCounts[label] = 0;
+  bucketRanges.push({ start, end, label });
+
+  current.setMonth(current.getMonth() + 1);
+}
+
 
       chartTrailers.forEach(t => {
         if (t.trailer?.supportEtru !== true || !t.checkinTime) return;
