@@ -26,114 +26,6 @@
 
     .header-banner img {
       height: 40px;
-    }
-
-    .header-banner h1 {
-      margin: 0;
-      font-size: 1.25rem;
-      font-weight: 300;
-    }
-
-    .dashboard-container {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .facilitySelectorCommonComponent {
-      display: flex;
-      align-items: center;
-      margin: 2rem 0;
-      gap: 1rem;
-    }
-
-    .facilitySelectorCommonComponent img {
-      height: 24px;
-    }
-
-    .card-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.5rem;
-      margin: 2rem 0;
-      justify-content: center;
-    }
-
-    .metric-card {
-      background: #rgb(250, 250, 250);
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-      padding: 1.5rem 2rem;
-      flex: 1 1 280px;
-      min-width: 260px;
-      text-align: left;
-      border-left: 3px solid rgb(211, 228, 254);
-      border-top: 4px solid rgb(211, 228, 254);
-      border-right: 3px solid rgb(211, 228, 254);
-      border-bottom: 3px solid rgb(211, 228, 254);
-    }
-
-    .metric-card h2 {
-      font-size: 0.95rem;
-      color: #0B588A;
-      margin: 0 0 0.5rem;
-      font-weight: 600;
-      text-transform: none;
-    }
-
-    .metric-card .value {
-      font-size: 2rem;
-      font-weight: 600;
-      color: #1e293b;
-    }
-
-    h2.section-title {
-      text-align: left;
-      font-size: 1.25rem;
-      color: #2b2f32;
-      margin: 3rem 0 1rem;
-      font-weight: 600;
-    }
-
-    canvas {
-      width: 100%;
-      background: white;
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 1rem;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    }
-  </style>
-</head>
-<body>
-  <div class="header-banner">
-    <img src="<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>eTRU Metrics</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      font-family: 'Segoe UI', Roboto, sans-serif;
-      background: #f5f6f6;
-      margin: 0;
-      padding: 0 2rem 3rem;
-      color: #2b2f32;
-    }
-
-    .header-banner {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-      width: 100%;
-      background-color: #f5f6f6;
-      color: #2b2f32;
-      padding: 3rem 2rem 2rem;
-      border-bottom: 1px solid #dbe2ea;
-    }
-
-    .header-banner img {
-      height: 40px;
       background-color: #f5f6f6;
     }
 
@@ -175,10 +67,7 @@
       flex: 1 1 280px;
       min-width: 260px;
       text-align: left;
-      border-left: 4px solid #0B588A;
-      border-top: 1px solid #e2e8f0;
-      border-right: 1px solid #e2e8f0;
-      border-bottom: 1px solid #e2e8f0;
+      border: 3px solid rgb(211, 228, 254);
     }
 
     .metric-card h2 {
@@ -216,44 +105,6 @@
 <body>
   <div class="header-banner">
     <img src="https://nsight.ndustrial.io/icons/favicon-32x32.png" alt="logo">
-    <h1>Nsight Fleet</h1>
-  </div>
-
-  <div class="dashboard-container">
-    <div class="facilitySelectorCommonComponent">
-      <span>Nsight Fleet: Charge Metrics</span>
-    </div>
-
-    <div class="card-container">
-      <div class="metric-card">
-        <h2>eTRU Trailers</h2>
-        <div class="value" id="count1">Loading...</div>
-      </div>
-      <div class="metric-card">
-        <h2>eTRU-Enabled Trailer %</h2>
-        <div class="value" id="percentEtruEnabled">Loading...</div>
-      </div>
-      <div class="metric-card">
-        <h2>eTRU Missed Assignments</h2>
-        <div class="value" id="count2">Loading...</div>
-      </div>
-      <div class="metric-card">
-        <h2>eTRU Assignment Rate</h2>
-        <div class="value" id="count3">Loading...</div>
-      </div>
-      <div class="metric-card">
-        <h2>Powering Session Count</h2>
-        <div class="value" id="submeterCount">Loading...</div>
-      </div>
-      <div class="metric-card">
-        <h2>Power Session Total Duration</h2>
-        <div class="value" id="submeterDuration">Loading...</div>
-      </div>
-    </div>
-
-    <h2 class="section-title">eTRU Trailer Appointments Over Time</h2>
-    <canvas id="lineChart" height="300"></canvas>
-  </div>" alt="logo">
     <h1>Ndustrial - Krispy Kreme eTRU Metrics (Last 30 Days)</h1>
   </div>
 
